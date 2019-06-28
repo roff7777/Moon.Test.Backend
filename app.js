@@ -37,9 +37,8 @@ io.on('connection', function(socket){
         console.log('user disconnected');
     });
 
-    socket.on('chat message', function(msg){
-        console.log('message: ' + msg);
-        io.emit('chat message', msg);
+    socket.on('chat message', function(roomMessage){
+        io.to(roomMessage.room).emit('chat message', roomMessage);
     });
 
     socket.on('join chat', function(conversacion){

@@ -75,9 +75,14 @@
         });
 
         $("body").delegate(".btn-enviar", "click", function(){
-            alert($(this).val());
-        });
+            let idElement = $(this).attr("data-idConversacion");
+            let mensaje = $(`.mensaje-${idElement}`).val();
 
+            socket.emit('chat message', {
+                "room": idElement,
+                "mensaje": mensaje
+            });
+        });
 
 
         function loginExitoso(){
@@ -134,9 +139,6 @@
                         data-parent="#conversaciones-box">
                             <div class=" card-body">
                                 <ul class="chat-box-messages-${elementId}">
-                                    <li>Mensaje 1</li>
-                                    <li>Mensaje 1</li>
-                                    <li>Mensaje 1</li>
                                 </ul>    
                             </div>
                             <div class="chat-box-input">
@@ -164,6 +166,10 @@
             socket.emit('join chat', conversacion);
         }
 
+        function agregarNuevoMensaje(roomMessage){
+            $(".chat-box-messages-" + roomMessage.room).append("<li>"+roomMessage.mensaje+"</li>");
+        }
+
         $(function () {
             socket = io();
 
@@ -188,6 +194,10 @@
 
             socket.on('join chat verified', function(conversacion){
                 agregarNuevaConversacion(conversacion);
+            });
+
+            socket.on('chat message', function(roomMessage){
+                agregarNuevoMensaje(roomMessage);
             });
         });
     </script>
