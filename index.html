@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    <title>chat</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -15,8 +15,20 @@
   </head>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-    
+
+  
     <body>
+        <div id="login-box">
+            <h2>Ingresa tu nombre de usuario</p>
+            <input type="text" id="username"/>
+            <button id="login">Ingresar</button>
+        </div>
+        <div id="contactos-box">
+            <h3>Contactos</h3>
+            <div id="contactos-list"></div>
+        </div>
+        <div id="conversaciones-box"></div>
+               
         <ul id="messages"></ul>
         <form>
             <input id="m" autocomplete="off" />
@@ -24,21 +36,117 @@
         </form>
     </body>
 
-
     <script>
+        var socket;
+        var remitente;
+        var usuario;
+        $("body").delegate("#login", "click", function(){
+            let user = {
+                "username": $("#username").val()
+            };
+            remitente = $("#username").val();
+            usuario = $("#username").val();
+            $.ajax({
+                url: '/user',
+                dataType: 'text',
+                type: 'post',
+                contentType: 'application/x-www-form-urlencoded',
+                data: user,
+                success: function( data, textStatus, jQxhr ){
+                    loginExitoso();
+                },
+                error: function( jqXhr, textStatus, errorThrown ){
+                    console.log("Error al logear");
+                }
+            });
+        });
+
+        $("body").delegate(".btn-conversar", "click", function(){
+            $(this).prop( "disabled", true );
+            let destinatario = $(this).attr("data-user");
+            crearEnlaceRemitenteDestinatario(remitente, destinatario);
+        });
+
+
+
+        function loginExitoso(){
+            $("#login-box").hide();
+            $("#contactos-box").show();
+
+            $.ajax({
+                url: '/user',
+                dataType: 'json',
+                type: 'get',
+                contentType: 'application/x-www-form-urlencoded',
+                success: function( data, textStatus, jQxhr ){
+                    cargarContactos(data);
+                },
+                error: function( jqXhr, textStatus, errorThrown ){
+                    console.log("Error al cargar contactos");
+                }
+            });
+        }
+
+        function cargarContactos(data){
+            $("#contactos-list").append(generarBotonesContactos(data));
+        }
+
+        function generarBotonesContactos(data){
+            let template = "";
+            data.forEach(element => {
+                template += `<button data-user="${element}" class="btn-conversar">${element}<button>`;
+            });
+            return template;
+        }
+
+        function agregarNuevaConversacion(conversacion){
+            //Verificar que no exista una caja con este contacto
+            $("#conversaciones-box").append(generarCajaConversacion(conversacion));
+        }
+
+        function generarCajaConversacion(conversacion){
+            return `
+                <div data-chat="${conversacion.remitente}-${conversacion.destinatario}">
+                    <div class="chat-box-header">${conversacion.destinatario}<div>
+                    <div class="chat-box-messages">Aqui irian los msj</div>
+                    <div class="chat-box-input">Aqui va el formulario</div>
+                <div>
+            `;
+        }
+
+        function crearEnlaceRemitenteDestinatario(remitente, destinatario){
+            let conversacion = {
+                "remitente": remitente,
+                "destinatario": destinatario
+            };
+            socket.emit('join chat', conversacion);
+        }
+
         $(function () {
-            var socket = io();
-            $('form').submit(function(e){
-                e.preventDefault(); // prevents page reloading
-                socket.emit('chat message', $('#m').val());
-                $('#m').val('');
-                return false;
+            socket = io();
+
+            $("#contactos-box").hide();
+
+            // $('form').submit(function(e){
+            //     e.preventDefault(); // prevents page reloading
+            //     socket.emit('chat message', $('#m').val());
+            //     $('#m').val('');
+            //     return false;
+            // });
+
+            // socket.on('chat message', function(msg){
+            //     $('#messages').append($('<li>').text(msg));
+            // });
+
+            socket.on('join chat', function(conversacion){
+                if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
+                    socket.emit("join chat verified", conversacion);
+                }
             });
 
-            socket.on('chat message', function(msg){
-                $('#messages').append($('<li>').text(msg));
+            socket.on('join chat verified', function(conversacion){
+                agregarNuevaConversacion(conversacion);
             });
         });
     </script>
-
 </html>
