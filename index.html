@@ -12,14 +12,17 @@
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
     </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   </head>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
   
-    <body>
+    <body class="container">
         <div id="login-box">
-            <h2>Ingresa tu nombre de usuario</p>
+            <h3>Ingresa tu nombre de usuario</h2>
             <input type="text" id="username"/>
             <button id="login">Ingresar</button>
         </div>
@@ -27,13 +30,17 @@
             <h3>Contactos</h3>
             <div id="contactos-list"></div>
         </div>
-        <div id="conversaciones-box"></div>
+
+        <div id="conversaciones-box" class="accordion">
+
+        </div>
                
         <ul id="messages"></ul>
         <form>
             <input id="m" autocomplete="off" />
             <button id="btn-send">Send</button>
         </form>
+
     </body>
 
     <script>
@@ -67,6 +74,10 @@
             crearEnlaceRemitenteDestinatario(remitente, destinatario);
         });
 
+        $("body").delegate(".btn-enviar", "click", function(){
+            alert($(this).val());
+        });
+
 
 
         function loginExitoso(){
@@ -94,25 +105,56 @@
         function generarBotonesContactos(data){
             let template = "";
             data.forEach(element => {
-                template += `<button data-user="${element}" class="btn-conversar">${element}<button>`;
+                template += `<button data-user="${element}" 
+                                     class="btn btn-primary btn-conversar">${element}<button>`;
             });
             return template;
         }
 
+        function generarCajaConversacion(conversacion){
+            var elementId = `${conversacion.remitente}-${conversacion.destinatario}`;
+            return `
+                <div data-chat="${elementId}"
+                     class="card"
+                     "
+                >
+                    <div class="chat-box-header card-header" id="heading${elementId}">
+                        <button class="btn btn-link" 
+                            type="button" 
+                            data-toggle="collapse" 
+                            data-target="#${elementId}" 
+                            aria-expanded="true" 
+                            aria-controls="${elementId}">    
+                                ${conversacion.destinatario}
+                        </button>
+                    </div>
+                    <div id="${elementId}" 
+                        class="collapse card-body show" 
+                        aria-labelledby="heading${elementId}" 
+                        data-parent="#conversaciones-box">
+                            <div class=" card-body">
+                                <ul class="chat-box-messages-${elementId}">
+                                    <li>Mensaje 1</li>
+                                    <li>Mensaje 1</li>
+                                    <li>Mensaje 1</li>
+                                </ul>    
+                            </div>
+                            <div class="chat-box-input">
+                                <input type="text" class="mensaje-${elementId}" />
+                                <button class="btn-enviar btn btn-secondary"
+                                        data-idConversacion="${elementId}">Enviar</button>   
+                            </div>
+                    </div>
+                </div>
+            `;
+        }
+        
         function agregarNuevaConversacion(conversacion){
             //Verificar que no exista una caja con este contacto
             $("#conversaciones-box").append(generarCajaConversacion(conversacion));
         }
 
-        function generarCajaConversacion(conversacion){
-            return `
-                <div data-chat="${conversacion.remitente}-${conversacion.destinatario}">
-                    <div class="chat-box-header">${conversacion.destinatario}<div>
-                    <div class="chat-box-messages">Aqui irian los msj</div>
-                    <div class="chat-box-input">Aqui va el formulario</div>
-                <div>
-            `;
-        }
+        
 
         function crearEnlaceRemitenteDestinatario(remitente, destinatario){
             let conversacion = {
