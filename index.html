@@ -47,20 +47,6 @@
             </div>
             <div id="conversaciones-box" class="col-10 accordion"></div>
         </div>
-
-
-        
-        <!-- <div class="row">
-            <div id="contactos-box col-3">
-                <h3>Contactos</h3>
-                <div id="contactos-list"></div>
-            </div>
-            <div id="conversaciones-box col-9" class="accordion">
-    
-            </div>
-        </div> -->
-
-
     </body>
 
     <script>
@@ -186,7 +172,18 @@
         
         function agregarNuevaConversacion(conversacion){
             //Verificar que no exista una caja con este contacto
-            $("#conversaciones-box").append(generarCajaConversacion(conversacion));
+            let idConversacion = `${conversacion.remitente}-${conversacion.destinatario}`;
+            let cajaConversacion = $("div[data-chat='"+ idConversacion + "']");
+            
+            let idConversacionReciproco = `${conversacion.destinatario}-${conversacion.remitente}`
+            let cajaConversacionReciproco = $("div[data-chat='"+ idConversacionReciproco + "']");
+
+
+            //Validacion para evitar duplicado
+            if(cajaConversacion.length <= 0 && cajaConversacionReciproco.length <= 0)
+            {
+                $("#conversaciones-box").append(generarCajaConversacion(conversacion));
+            }
         }
 
         function crearEnlaceRemitenteDestinatario(remitente, destinatario){

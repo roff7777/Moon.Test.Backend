@@ -47,7 +47,6 @@ io.on('connection', function(socket){
     });
 
     socket.on('join chat verified', function(conversacion){
-        console.log("Unido");
         socket.join(`${conversacion.remitente}-${conversacion.destinatario}`)
         io.emit('join chat verified', conversacion);
     });
