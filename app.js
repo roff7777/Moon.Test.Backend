@@ -19,20 +19,50 @@ app.get('/user', function(req, res){
 });
 
 app.post('/user', function(req, res){
-    //TODO: Agregar validacion para evitar usuarios duplicados
-    users.push(req.body.username);
+    var user = {
+        "userName": req.body.username,
+        "socketId": req.body.socketid
+    };
+    //TODO: Implementar que no existan duplicados
+    users.push(user);
     res.status(200).end();
 });
 
 app.delete('/user', function(req, res){
-    users = [];
+    users = {};
     res.status(200).end();    
 });
 
+function obtenerUsuario(userName){
+    let userAux;
+    for(var i= 0; i < users.length; i++){
+        if(users[i].userName == userName){
+            userAux = users[i];
+        }
+    }
+    return userAux;
+}
+
 
 io.on('connection', function(socket){
-    console.log('a user connected');
+    console.log('connected: ' + socket.id);
+    io.to(socket.id).emit("socket connected", socket.id);
+
+    socket.on('personal message', function(messageInfo){
+        var usuario = obtenerUsuario(messageInfo.destinatario);
+        if(usuario != null){
+            io.to(usuario.socketId).emit('personal message', messageInfo.mensaje);
+        }
+    });
     
+    socket.on('reload users', function(){
+        io.emit('reload users');
+    });
+
+
+
+
+
     socket.on('disconnect', function(){
         console.log('user disconnected');
     });
@@ -49,10 +79,6 @@ io.on('connection', function(socket){
     socket.on('join chat verified', function(conversacion){
         socket.join(`${conversacion.remitente}-${conversacion.destinatario}`)
         io.emit('join chat verified', conversacion);
-    });
-
-    socket.on('reload users', function(){
-        io.emit('reload users');
     });
 
 

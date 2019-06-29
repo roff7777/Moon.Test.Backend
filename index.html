@@ -14,14 +14,15 @@
     </style>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
   </head>
-  <script src="/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
   
     <body class="container-fluid">
-        <input id="user" hidden/>
+        <input id="usuario" hidden/>
+        <input id="socketId" hidden />
         <div id="login-box" class="row justify-content-center">
             <div class="col-4 card">
                 <div class="card-body">
@@ -35,7 +36,7 @@
             </div>
         </div>
 
-        <div class="row">
+        <div id="app" class="row">
             <div class="col-12"><h3>Bienvenido <span id="user-diplay"></span></h3></div>
             <div class="col-2 card">
                 <div class="card-body">
@@ -47,6 +48,7 @@
             </div>
             <div id="conversaciones-box" class="col-10 accordion"></div>
         </div>
+
     </body>
 
     <script>
@@ -55,10 +57,12 @@
         var usuario;
         $("body").delegate("#login", "click", function(){
             let user = {
-                "username": $("#username").val()
+                "username": $("#username").val(),
+                "socketid": $("#socketId").val()
             };
-            remitente = $("#username").val();
-            usuario = $("#username").val();
+            usuario =$("#username").val();
+            $("#usuario").val($("#username").val());
+            
             $.ajax({
                 url: '/user',
                 dataType: 'text',
@@ -83,17 +87,17 @@
         $("body").delegate(".btn-enviar", "click", function(){
             let idElement = $(this).attr("data-idConversacion");
             let mensaje = $(`.mensaje-${idElement}`).val();
-            $(`.mensaje-${idElement}`).val("");
             socket.emit('chat message', {
                 "room": idElement,
                 "mensaje": mensaje
             });
+
+            $(`.mensaje-${idElement}`).val("");
         });
 
         function loginExitoso(usuario){
             $("#login-box").hide();
-            $(".app").show();
-            $("#user").val(usuario);
+            $("#app").show();
             $("#user-diplay").empty().html(usuario);
             socket.emit("reload users");
         }
@@ -116,16 +120,16 @@
         function generarBotonesContactos(data, usuario){
             let template = "";
             data.forEach(element => {
-                if(element != usuario)
+                if(element.userName != usuario)
                 {
                     template += `
                         <div class="card">
                             <div class="card-body row">
                                 <div class="col-8">
-                                    <label>${element}</label>
+                                    <label>${element.userName}</label>
                                 </div>
                                 <div class="col-2">
-                                    <button data-user="${element}" class="btn btn-primary btn-conversar">Chat</button>
+                                    <button data-user="${element.userName}" class="btn btn-primary btn-conversar">Chat</button>
                                 </div>
                             </div>
                         </div>`;
@@ -204,29 +208,46 @@
         }
 
         $(function () {
+            $("#app").hide();
+            
             socket = io();
-
-            $(".app").hide();
-
-            socket.on('join chat', function(conversacion){
-                if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
-                    socket.emit("join chat verified", conversacion);
-                }
+            socket.on('socket connected', function(socketId){
+                $("#socketId").val(socketId);
             });
-
-            socket.on('join chat verified', function(conversacion){
-                if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
-                    agregarNuevaConversacion(conversacion);
-                }
-            });
-
-            socket.on('chat message', function(roomMessage){
-                agregarNuevoMensaje(roomMessage);
-            });
-
+            
             socket.on('reload users', function(){
-                cargarContactos($("#user").val());
+                cargarContactos($("#usuario").val());
             });
+            
+            socket.on('personal message', function(mensaje){
+                console.log("Me llego y soy: " + socketId);
+                console.log(mensaje);
+            });
+
+            // socket.on('join chat', function(conversacion){
+            //     if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
+            //         socket.emit("join chat verified", conversacion);
+            //     }
+            // });
+
+            // socket.on('join chat verified', function(conversacion){
+            //     if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
+            //         agregarNuevaConversacion(conversacion);
+            //     }
+            // });
+
+            // socket.on('chat message', function(roomMessage){
+            //     agregarNuevoMensaje(roomMessage);
+            // });
+
         });
+
+        function enviarNick(){
+            socket.emit("personal message", {
+                destinatario: "nick",
+                mensaje : "hola nick"
+            });
+        }
+
     </script>
 </html>
