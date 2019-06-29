@@ -135,8 +135,14 @@
             return template;
         }
 
-        function generarCajaConversacion(conversacion){
-            var elementId = `${conversacion.remitente}-${conversacion.destinatario}`;
+        function generarCajaConversacion(conversacion, usuario){
+            let elementId = `${conversacion.remitente}-${conversacion.destinatario}`;
+            let tituloCajaConversacion = conversacion.destinatario;
+            if(conversacion.destinatario == usuario)
+            {
+                tituloCajaConversacion = conversacion.remitente;
+            }
+
             return `
                 <div data-chat="${elementId}"
                      class="card"
@@ -149,7 +155,7 @@
                             data-target="#${elementId}" 
                             aria-expanded="true" 
                             aria-controls="${elementId}">    
-                                ${conversacion.destinatario}
+                                ${tituloCajaConversacion}
                         </button>
                     </div>
                     <div id="${elementId}" 
@@ -182,7 +188,7 @@
             //Validacion para evitar duplicado
             if(cajaConversacion.length <= 0 && cajaConversacionReciproco.length <= 0)
             {
-                $("#conversaciones-box").append(generarCajaConversacion(conversacion));
+                $("#conversaciones-box").append(generarCajaConversacion(conversacion, usuario));
             }
         }
 
