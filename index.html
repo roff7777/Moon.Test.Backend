@@ -90,7 +90,6 @@
             });
         });
 
-
         function loginExitoso(usuario){
             $("#login-box").hide();
             $(".app").show();
@@ -216,7 +215,9 @@
             });
 
             socket.on('join chat verified', function(conversacion){
-                agregarNuevaConversacion(conversacion);
+                if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
+                    agregarNuevaConversacion(conversacion);
+                }
             });
 
             socket.on('chat message', function(roomMessage){
