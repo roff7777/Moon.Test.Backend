@@ -52,6 +52,10 @@ io.on('connection', function(socket){
         io.emit('join chat verified', conversacion);
     });
 
+    socket.on('reload users', function(){
+        io.emit('reload users');
+    });
+
 
 });
 

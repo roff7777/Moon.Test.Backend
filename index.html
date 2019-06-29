@@ -20,26 +20,46 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
   
-    <body class="container">
-        <div id="login-box">
-            <h3>Ingresa tu nombre de usuario</h2>
-            <input type="text" id="username"/>
-            <button id="login">Ingresar</button>
-        </div>
-        <div id="contactos-box">
-            <h3>Contactos</h3>
-            <div id="contactos-list"></div>
+    <body class="container-fluid">
+        <input id="user" hidden/>
+        <div id="login-box" class="row justify-content-center">
+            <div class="col-4 card">
+                <div class="card-body">
+                    <h4>Ingresa tu nombre de usuario</h2>
+                    <br/>
+                    <div class="form-group">
+                        <input class="form-control" type="text" id="username"/>
+                        <button class="btn btn-primary" id="login">Ingresar</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div id="conversaciones-box" class="accordion">
+        <div class="row">
+            <div class="col-12"><h3>Bienvenido <span id="user-diplay"></span></h3></div>
+            <div class="col-2 card">
+                <div class="card-body">
+                    <h4>Contactos</h3>
+                    <div id="contactos-list">
 
+                    </div>
+                </div>
+            </div>
+            <div id="conversaciones-box" class="col-10 accordion"></div>
         </div>
-               
-        <ul id="messages"></ul>
-        <form>
-            <input id="m" autocomplete="off" />
-            <button id="btn-send">Send</button>
-        </form>
+
+
+        
+        <!-- <div class="row">
+            <div id="contactos-box col-3">
+                <h3>Contactos</h3>
+                <div id="contactos-list"></div>
+            </div>
+            <div id="conversaciones-box col-9" class="accordion">
+    
+            </div>
+        </div> -->
+
 
     </body>
 
@@ -60,7 +80,7 @@
                 contentType: 'application/x-www-form-urlencoded',
                 data: user,
                 success: function( data, textStatus, jQxhr ){
-                    loginExitoso();
+                    loginExitoso(usuario);
                 },
                 error: function( jqXhr, textStatus, errorThrown ){
                     console.log("Error al logear");
@@ -85,17 +105,23 @@
         });
 
 
-        function loginExitoso(){
+        function loginExitoso(usuario){
             $("#login-box").hide();
-            $("#contactos-box").show();
+            $(".app").show();
+            $("#user").val(usuario)
+            cargarContactos(usuario);
+            $("#user-diplay").empty().html(usuario);
+            socket.emit("reload users");
+        }
 
+        function cargarContactos(usuario){
             $.ajax({
                 url: '/user',
                 dataType: 'json',
                 type: 'get',
                 contentType: 'application/x-www-form-urlencoded',
                 success: function( data, textStatus, jQxhr ){
-                    cargarContactos(data);
+                    $("#contactos-list").empty().append(generarBotonesContactos(data, usuario));
                 },
                 error: function( jqXhr, textStatus, errorThrown ){
                     console.log("Error al cargar contactos");
@@ -103,15 +129,23 @@
             });
         }
 
-        function cargarContactos(data){
-            $("#contactos-list").append(generarBotonesContactos(data));
-        }
-
-        function generarBotonesContactos(data){
+        function generarBotonesContactos(data, usuario){
             let template = "";
             data.forEach(element => {
-                template += `<button data-user="${element}" 
-                                     class="btn btn-primary btn-conversar">${element}<button>`;
+                if(element != usuario)
+                {
+                    template += `
+                        <div class="card">
+                            <div class="card-body row">
+                                <div class="col-8">
+                                    <label>${element}</label>
+                                </div>
+                                <div class="col-2">
+                                    <button data-user="${element}" class="btn btn-primary btn-conversar">Chat</button>
+                                </div>
+                            </div>
+                        </div>`;
+                }
             });
             return template;
         }
@@ -156,8 +190,6 @@
             $("#conversaciones-box").append(generarCajaConversacion(conversacion));
         }
 
-        
-
         function crearEnlaceRemitenteDestinatario(remitente, destinatario){
             let conversacion = {
                 "remitente": remitente,
@@ -173,18 +205,7 @@
         $(function () {
             socket = io();
 
-            $("#contactos-box").hide();
-
-            // $('form').submit(function(e){
-            //     e.preventDefault(); // prevents page reloading
-            //     socket.emit('chat message', $('#m').val());
-            //     $('#m').val('');
-            //     return false;
-            // });
-
-            // socket.on('chat message', function(msg){
-            //     $('#messages').append($('<li>').text(msg));
-            // });
+            $(".app").hide();
 
             socket.on('join chat', function(conversacion){
                 if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
@@ -199,6 +220,9 @@
             socket.on('chat message', function(roomMessage){
                 agregarNuevoMensaje(roomMessage);
             });
+
+            socket.on('reload users', cargarContactos($("#user").val()));
+
         });
     </script>
 </html>
