@@ -59,6 +59,12 @@ io.on('connection', function(socket){
         io.emit('reload users');
     });
 
+    socket.on('join chat', function(conversacion){
+        var usuarioDestinatario = obtenerUsuario(conversacion.destinatario);
+        var usuarioRemitente = obtenerUsuario(conversacion.remitente);
+        io.to(usuarioDestinatario.socketId).emit('join chat', conversacion);
+        io.to(usuarioRemitente.socketId).emit('join chat', conversacion);
+    });
 
 
 
@@ -71,10 +77,6 @@ io.on('connection', function(socket){
         io.to(roomMessage.room).emit('chat message', roomMessage);
     });
 
-    socket.on('join chat', function(conversacion){
-        console.log("Intento de conexion");
-        io.emit('join chat', conversacion);
-    });
 
     socket.on('join chat verified', function(conversacion){
         socket.join(`${conversacion.remitente}-${conversacion.destinatario}`)

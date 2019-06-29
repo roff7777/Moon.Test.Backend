@@ -81,7 +81,7 @@
         $("body").delegate(".btn-conversar", "click", function(){
             $(this).prop( "disabled", true );
             let destinatario = $(this).attr("data-user");
-            crearEnlaceRemitenteDestinatario(remitente, destinatario);
+            crearEnlaceRemitenteDestinatario(usuario, destinatario);
         });
 
         $("body").delegate(".btn-enviar", "click", function(){
@@ -138,41 +138,34 @@
             return template;
         }
 
-        function generarCajaConversacion(conversacion, usuario){
-            let elementId = `${conversacion.remitente}-${conversacion.destinatario}`;
-            let tituloCajaConversacion = conversacion.destinatario;
-            if(conversacion.destinatario == usuario)
-            {
-                tituloCajaConversacion = conversacion.remitente;
-            }
-
+        function generarCajaConversacion(nombreCaja){
             return `
-                <div data-chat="${elementId}"
+                <div data-chat="${nombreCaja}"
                      class="card"
                      "
                 >
-                    <div class="chat-box-header card-header" id="heading${elementId}">
+                    <div class="chat-box-header card-header" id="heading${nombreCaja}">
                         <button class="btn btn-link" 
                             type="button" 
                             data-toggle="collapse" 
-                            data-target="#${elementId}" 
+                            data-target="#${nombreCaja}" 
                             aria-expanded="true" 
-                            aria-controls="${elementId}">    
-                                ${tituloCajaConversacion}
+                            aria-controls="${nombreCaja}">    
+                                ${nombreCaja}
                         </button>
                     </div>
-                    <div id="${elementId}" 
+                    <div id="${nombreCaja}" 
                         class="collapse card-body show" 
-                        aria-labelledby="heading${elementId}" 
+                        aria-labelledby="heading${nombreCaja}" 
                         data-parent="#conversaciones-box">
                             <div class=" card-body">
-                                <ul class="chat-box-messages-${elementId}">
+                                <ul class="chat-box-messages-${nombreCaja}">
                                 </ul>    
                             </div>
                             <div class="chat-box-input">
-                                <input type="text" class="mensaje-${elementId}" />
+                                <input type="text" class="mensaje-${nombreCaja}" />
                                 <button class="btn-enviar btn btn-secondary"
-                                        data-idConversacion="${elementId}">Enviar</button>   
+                                        data-idConversacion="${nombreCaja}">Enviar</button>   
                             </div>
                     </div>
                 </div>
@@ -180,18 +173,19 @@
         }
         
         function agregarNuevaConversacion(conversacion){
-            //Verificar que no exista una caja con este contacto
-            let idConversacion = `${conversacion.remitente}-${conversacion.destinatario}`;
-            let cajaConversacion = $("div[data-chat='"+ idConversacion + "']");
-            
-            let idConversacionReciproco = `${conversacion.destinatario}-${conversacion.remitente}`
-            let cajaConversacionReciproco = $("div[data-chat='"+ idConversacionReciproco + "']");
+            var cajaExistente;
+            var nombreCaja;
+            if(usuario == conversacion.remitente){
+                cajaExistente = $("div[data-chat='"+ conversacion.destinatario + "']")
+                nombreCaja = conversacion.destinatario;
+            }
+            else{
+                cajaExistente = $("div[data-chat='"+ conversacion.remitente + "']") 
+                nombreCaja = conversacion.remitente;
+            }
 
-
-            //Validacion para evitar duplicado
-            if(cajaConversacion.length <= 0 && cajaConversacionReciproco.length <= 0)
-            {
-                $("#conversaciones-box").append(generarCajaConversacion(conversacion, usuario));
+            if(cajaExistente.length <= 0){
+                $("#conversaciones-box").append(generarCajaConversacion(nombreCaja));
             }
         }
 
@@ -224,15 +218,12 @@
                 console.log(mensaje);
             });
 
-            // socket.on('join chat', function(conversacion){
-            //     if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
-            //         socket.emit("join chat verified", conversacion);
-            //     }
-            // });
+            socket.on('join chat', function(conversacion){
+                agregarNuevaConversacion(conversacion);
+            });
 
             // socket.on('join chat verified', function(conversacion){
             //     if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
-            //         agregarNuevaConversacion(conversacion);
             //     }
             // });
 
