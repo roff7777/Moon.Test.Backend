@@ -83,7 +83,7 @@
         $("body").delegate(".btn-enviar", "click", function(){
             let idElement = $(this).attr("data-idConversacion");
             let mensaje = $(`.mensaje-${idElement}`).val();
-
+            $(`.mensaje-${idElement}`).val("");
             socket.emit('chat message', {
                 "room": idElement,
                 "mensaje": mensaje
