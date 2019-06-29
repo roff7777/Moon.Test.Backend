@@ -23,8 +23,12 @@ app.post('/user', function(req, res){
         "userName": req.body.username,
         "socketId": req.body.socketid
     };
-    //TODO: Implementar que no existan duplicados
-    users.push(user);
+    var usuarioAux = obtenerUsuario(user.userName);
+    if(usuarioAux == null){
+        users.push(user);
+        res.status(200).end();
+    }
+    actualizarUsuario(user);
     res.status(200).end();
 });
 
@@ -41,6 +45,15 @@ function obtenerUsuario(userName){
         }
     }
     return userAux;
+}
+
+function actualizarUsuario(user){
+    for(var i = 0; i < users.length; i++){
+        if(users[i].userName == user.userName){
+            users[i].socketId = user.socketId;
+            return;
+        }
+    }
 }
 
 
