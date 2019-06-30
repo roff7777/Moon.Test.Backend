@@ -79,24 +79,15 @@ io.on('connection', function(socket){
         io.to(usuarioRemitente.socketId).emit('join chat', conversacion);
     });
 
-
-
-
     socket.on('disconnect', function(){
         console.log('user disconnected');
     });
 
-    socket.on('chat message', function(roomMessage){
-        io.to(roomMessage.room).emit('chat message', roomMessage);
+    socket.on('chat message', function(chat){
+        var usuarioDestinatario = obtenerUsuario(chat.destinatario);
+        var usuarioRemitente = obtenerUsuario(chat.remitente);
+        io.to(usuarioDestinatario.socketId).emit('chat message', chat);
     });
-
-
-    socket.on('join chat verified', function(conversacion){
-        socket.join(`${conversacion.remitente}-${conversacion.destinatario}`)
-        io.emit('join chat verified', conversacion);
-    });
-
-
 });
 
 

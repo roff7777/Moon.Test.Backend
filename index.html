@@ -85,14 +85,15 @@
         });
 
         $("body").delegate(".btn-enviar", "click", function(){
-            let idElement = $(this).attr("data-idConversacion");
-            let mensaje = $(`.mensaje-${idElement}`).val();
+            let destinatario = $(this).attr("data-idConversacion");
+            let mensaje = $(`.mensaje-${destinatario}`).val();
             socket.emit('chat message', {
-                "room": idElement,
+                "remitente": usuario,
+                "destinatario": destinatario,
                 "mensaje": mensaje
             });
-
-            $(`.mensaje-${idElement}`).val("");
+            $(".chat-box-messages-" + destinatario).append("<li>"+ mensaje + "</li>");
+            $(`.mensaje-${destinatario}`).val("");
         });
 
         function loginExitoso(usuario){
@@ -151,7 +152,7 @@
                             data-target="#${nombreCaja}" 
                             aria-expanded="true" 
                             aria-controls="${nombreCaja}">    
-                                ${nombreCaja}
+                                ${nombreCaja} dice:
                         </button>
                     </div>
                     <div id="${nombreCaja}" 
@@ -197,8 +198,15 @@
             socket.emit('join chat', conversacion);
         }
 
-        function agregarNuevoMensaje(roomMessage){
-            $(".chat-box-messages-" + roomMessage.room).append("<li>"+roomMessage.mensaje+"</li>");
+        function agregarNuevoMensaje(chat){
+            var idConversacion;
+            if(usuario = chat.destinatario){
+                idConversacion = chat.remitente;
+            }else{
+                idConversacion = chat.destinatario;
+            }
+
+            $(".chat-box-messages-" + idConversacion).append("<li>"+chat.mensaje+"</li>");
         }
 
         $(function () {
@@ -222,23 +230,11 @@
                 agregarNuevaConversacion(conversacion);
             });
 
-            // socket.on('join chat verified', function(conversacion){
-            //     if(usuario == conversacion.destinatario || usuario == conversacion.remitente){
-            //     }
-            // });
-
-            // socket.on('chat message', function(roomMessage){
-            //     agregarNuevoMensaje(roomMessage);
-            // });
+            socket.on('chat message', function(chat){
+                agregarNuevoMensaje(chat);
+            });
 
         });
-
-        function enviarNick(){
-            socket.emit("personal message", {
-                destinatario: "nick",
-                mensaje : "hola nick"
-            });
-        }
 
     </script>
 </html>
