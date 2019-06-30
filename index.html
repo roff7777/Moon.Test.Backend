@@ -92,7 +92,7 @@
                 "destinatario": destinatario,
                 "mensaje": mensaje
             });
-            $(".chat-box-messages-" + destinatario).append("<li>"+ mensaje + "</li>");
+            $(".chat-box-messages-" + destinatario).append(generarCuadroMensaje(mensaje, true));
             $(`.mensaje-${destinatario}`).val("");
         });
 
@@ -159,9 +159,8 @@
                         class="collapse card-body show" 
                         aria-labelledby="heading${nombreCaja}" 
                         data-parent="#conversaciones-box">
-                            <div class=" card-body">
-                                <ul class="chat-box-messages-${nombreCaja}">
-                                </ul>    
+                            <div class=" card-body chat-box-messages-${nombreCaja}">
+                                   
                             </div>
                             <div class="chat-box-input">
                                 <input type="text" class="mensaje-${nombreCaja}" />
@@ -206,7 +205,14 @@
                 idConversacion = chat.destinatario;
             }
 
-            $(".chat-box-messages-" + idConversacion).append("<li>"+chat.mensaje+"</li>");
+            $(".chat-box-messages-" + idConversacion).append(generarCuadroMensaje(chat.mensaje, false));
+        }
+
+        function generarCuadroMensaje(mensaje, esRemitente){
+            if(esRemitente){
+               return `<div class="alert alert-dark">${mensaje}</div>`;
+            }
+            return `<div class="alert alert-primary">${mensaje}</div>`;
         }
 
         $(function () {
